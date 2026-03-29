@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AutoLoca - Statistiques</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <style>
+        :root{--primary:#1a3c5e;--sidebar-w:260px}
+        body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
+        .sidebar{width:var(--sidebar-w);min-height:100vh;position:fixed;top:0;left:0;background:linear-gradient(180deg,#1a3c5e 0%,#0d2137 100%);z-index:1000;overflow-y:auto}
+        .sidebar-brand{background:rgba(255,255,255,0.05);padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .sidebar-brand h5{color:#fff;margin:0;font-weight:700}
+        .sidebar-brand small{color:rgba(255,255,255,0.5);font-size:11px}
+        .sidebar .nav-link{color:rgba(255,255,255,0.7);padding:12px 20px;border-radius:8px;margin:2px 12px;transition:all .2s;font-size:14px}
+        .sidebar .nav-link:hover,.sidebar .nav-link.active{color:#fff;background:rgba(255,255,255,0.12)}
+        .sidebar-section{padding:16px 20px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);font-weight:600}
+        .main{margin-left:var(--sidebar-w)}
+        .topbar{background:#fff;padding:14px 28px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .topbar h4{margin:0;color:var(--primary);font-weight:700;font-size:1.15rem}
+        .content{padding:24px 28px}
+        .chart-card{background:#fff;border-radius:14px;padding:22px;border:1px solid #e2e8f0}
+        .chart-title{font-size:14px;font-weight:700;color:#1a3c5e;margin-bottom:16px}
+        .stat-card{background:#fff;border-radius:14px;padding:22px;border:1px solid #e2e8f0}
+        .stat-value{font-size:2rem;font-weight:800;color:#1a3c5e;line-height:1.1}
+        .stat-label{font-size:13px;color:#64748b;margin-top:4px}
+        .taux-ring{position:relative;width:120px;height:120px;margin:0 auto}
+        .gauge-container{text-align:center;padding:10px}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <h5><i class="bi bi-car-front-fill me-2" style="color:#e85d04"></i>AutoLoc</h5>
+        <small>Agence de location</small>
+    </div>
+    <nav class="mt-2">
+        <div class="sidebar-section">Principal</div>
+        <a href="/" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Tableau de bord</a>
+        <div class="sidebar-section">Gestion</div>
+        <a href="/voitures" class="nav-link"><i class="bi bi-car-front me-2"></i>Véhicules</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people me-2"></i>Clients</a>
+        <a href="/locations" class="nav-link"><i class="bi bi-journal-text me-2"></i>Locations</a>
+        <div class="sidebar-section">Analyse</div>
+        <a href="/stats" class="nav-link active"><i class="bi bi-bar-chart-line me-2"></i>Statistiques</a>
+        <div class="sidebar-section">Système</div>
+        <a href="/h2-console" target="_blank" class="nav-link"><i class="bi bi-database me-2"></i>Base de données</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="topbar">
+        <h4><i class="bi bi-bar-chart-line me-2" style="color:#e85d04"></i>Statistiques &amp; Rapports</h4>
+    </div>
+    <div class="content">
+
+        <!-- KPI row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(tauxOccupation,0,0)} + '%'">0%</div>
+                    <div class="stat-label">Taux d'occupation</div>
+                    <div style="height:6px;border-radius:3px;background:#e2e8f0;margin-top:10px;overflow:hidden">
+                        <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#1a3c5e,#e85d04)"
+                             th:style="'width:' + ${tauxOccupation} + '%'"></div>
+                    </div>
+                    <small class="text-muted" th:text="${totalVoitures - voituresDisponibles} + '/' + ${totalVoitures} + ' véhicules loués'"></small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(totalRevenus,0,'COMMA',0,'POINT')} + ' DH'">0</div>
+                    <div class="stat-label">Revenus totaux</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value" style="color:#1e40af" th:text="${locationsEnCours}">0</div>
+                    <div class="stat-label">Locations en cours</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card text-center">
+                    <div class="stat-value" style="color:#166534" th:text="${locationsTerminees}">0</div>
+                    <div class="stat-label">Locations terminées</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <div class="chart-title"><i class="bi bi-bar-chart me-2"></i>Revenus par marque (DH)</div>
+                    <canvas id="revenusMarqueChart" height="240"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-card">
+                    <div class="chart-title"><i class="bi bi-graph-up me-2"></i>Revenus mensuels (DH)</div>
+                    <canvas id="revenusMoisChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statut donut -->
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="chart-card">
+                    <div class="chart-title"><i class="bi bi-pie-chart me-2"></i>Répartition des locations</div>
+                    <canvas id="statutChart" height="220"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <div class="chart-title"><i class="bi bi-table me-2"></i>Revenus détaillés par marque</div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th style="font-size:12px;color:#64748b">Marque</th><th style="font-size:12px;color:#64748b">Revenus (DH)</th><th style="font-size:12px;color:#64748b">Part</th></tr></thead>
+                            <tbody>
+                                <tr th:each="entry : ${revenusParMarque}">
+                                    <td class="fw-semibold" th:text="${entry.key}"></td>
+                                    <td th:text="${#numbers.formatDecimal(entry.value,0,'COMMA',2,'POINT')} + ' DH'"></td>
+                                    <td>
+                                        <div style="height:6px;border-radius:3px;background:#e2e8f0;width:100px;overflow:hidden">
+                                            <div style="height:100%;border-radius:3px;background:#1a3c5e"
+                                                 th:style="'width:' + (${totalRevenus > 0} ? ${entry.value / totalRevenus * 100} : 0) + '%'"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#maps.size(revenusParMarque) == 0}">
+                                    <td colspan="3" class="text-center text-muted py-3">Aucune donnée disponible</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    Chart.defaults.font.family = "'Segoe UI', sans-serif";
+
+    // Revenus par marque
+    const marques = /*[[${revenusParMarque.keySet()}]]*/ [];
+    const revenus = /*[[${revenusParMarque.values()}]]*/ [];
+    new Chart(document.getElementById('revenusMarqueChart'), {
+        type: 'bar',
+        data: {
+            labels: marques,
+            datasets: [{
+                label: 'Revenus (DH)',
+                data: revenus,
+                backgroundColor: ['#1a3c5e','#2563eb','#e85d04','#f59e0b','#10b981','#8b5cf6'],
+                borderRadius: 8, borderSkipped: false
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+    });
+
+    // Revenus par mois
+    const moisLabels = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+    const revenusMois = /*[[${revenusParMois.values()}]]*/ [];
+    new Chart(document.getElementById('revenusMoisChart'), {
+        type: 'line',
+        data: {
+            labels: moisLabels,
+            datasets: [{
+                label: 'Revenus (DH)',
+                data: revenusMois,
+                borderColor: '#1a3c5e',
+                backgroundColor: 'rgba(26,60,94,0.08)',
+                pointBackgroundColor: '#1a3c5e',
+                fill: true, tension: 0.4, borderWidth: 2, pointRadius: 4
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } }
+    });
+
+    // Statuts donut
+    const enCours = /*[[${locationsEnCours}]]*/ 0;
+    const terminees = /*[[${locationsTerminees}]]*/ 0;
+    const annulees = /*[[${locationsAnnulees}]]*/ 0;
+    new Chart(document.getElementById('statutChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['En cours', 'Terminées', 'Annulées'],
+            datasets: [{
+                data: [enCours, terminees, annulees],
+                backgroundColor: ['#3b82f6','#22c55e','#ef4444'],
+                borderWidth: 0, hoverOffset: 6
+            }]
+        },
+        options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } } } }
+    });
+</script>
+</body>
+</html>

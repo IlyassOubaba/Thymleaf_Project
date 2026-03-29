@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AutoLoc - Location</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.0/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <style>
+        :root{--primary:#1a3c5e;--sidebar-w:260px}
+        body{background:#f0f4f8;font-family:'Segoe UI',sans-serif}
+        .sidebar{width:var(--sidebar-w);min-height:100vh;position:fixed;top:0;left:0;background:linear-gradient(180deg,#1a3c5e 0%,#0d2137 100%);z-index:1000;overflow-y:auto}
+        .sidebar-brand{background:rgba(255,255,255,0.05);padding:20px;border-bottom:1px solid rgba(255,255,255,0.1)}
+        .sidebar-brand h5{color:#fff;margin:0;font-weight:700}
+        .sidebar-brand small{color:rgba(255,255,255,0.5);font-size:11px}
+        .sidebar .nav-link{color:rgba(255,255,255,0.7);padding:12px 20px;border-radius:8px;margin:2px 12px;transition:all .2s;font-size:14px}
+        .sidebar .nav-link:hover,.sidebar .nav-link.active{color:#fff;background:rgba(255,255,255,0.12)}
+        .sidebar-section{padding:16px 20px 6px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);font-weight:600}
+        .main{margin-left:var(--sidebar-w)}
+        .topbar{background:#fff;padding:14px 28px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .topbar h4{margin:0;color:var(--primary);font-weight:700;font-size:1.15rem}
+        .content{padding:24px 28px}
+        .form-card{background:#fff;border-radius:14px;padding:28px;border:1px solid #e2e8f0;max-width:720px}
+        .form-label{font-weight:600;font-size:13px;color:#374151}
+        .form-control,.form-select{border-radius:8px;border-color:#e2e8f0;font-size:14px}
+        .form-control:focus,.form-select:focus{border-color:#1a3c5e;box-shadow:0 0 0 3px rgba(26,60,94,.1)}
+        .is-invalid{border-color:#ef4444!important}
+        .invalid-feedback{font-size:12px}
+        .btn-submit{background:#1a3c5e;color:#fff;border:none;border-radius:8px;padding:10px 24px;font-weight:600}
+        .btn-submit:hover{background:#14304d;color:#fff}
+        .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #f1f5f9}
+        .montant-preview{background:linear-gradient(135deg,#1a3c5e,#2563eb);color:#fff;border-radius:12px;padding:20px 24px}
+        .montant-value{font-size:2rem;font-weight:800}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <h5><i class="bi bi-car-front-fill me-2" style="color:#e85d04"></i>AutoLoc</h5>
+        <small>Agence de location</small>
+    </div>
+    <nav class="mt-2">
+        <div class="sidebar-section">Principal</div>
+        <a href="/" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Tableau de bord</a>
+        <div class="sidebar-section">Gestion</div>
+        <a href="/voitures" class="nav-link"><i class="bi bi-car-front me-2"></i>Véhicules</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people me-2"></i>Clients</a>
+        <a href="/locations" class="nav-link active"><i class="bi bi-journal-text me-2"></i>Locations</a>
+        <div class="sidebar-section">Analyse</div>
+        <a href="/stats" class="nav-link"><i class="bi bi-bar-chart-line me-2"></i>Statistiques</a>
+        <div class="sidebar-section">Système</div>
+        <a href="/h2-console" target="_blank" class="nav-link"><i class="bi bi-database me-2"></i>Base de données</a>
+    </nav>
+</div>
+<div class="main">
+    <div class="topbar">
+        <h4>
+            <i class="bi bi-journal-plus me-2" style="color:#e85d04"></i>
+            <span th:text="${location.id == null} ? 'Nouvelle location' : 'Modifier la location'"></span>
+        </h4>
+        <a href="/locations" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Retour</a>
+    </div>
+    <div class="content">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="form-card">
+                    <div class="section-title"><i class="bi bi-journal-text me-2"></i>Détails du contrat</div>
+                    <form th:action="${location.id == null} ? '/locations/save' : '/locations/update'" method="post" th:object="${location}" id="locationForm">
+                        <input type="hidden" th:field="*{id}"/>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Voiture <span class="text-danger">*</span></label>
+                                <select class="form-select" th:field="*{voiture.id}" id="voitureSelect"
+                                        th:classappend="${#fields.hasErrors('voiture')} ? 'is-invalid'">
+                                    <option value="">-- Sélectionner une voiture --</option>
+                                    <option th:each="v : ${voitures}"
+                                            th:value="${v.id}"
+                                            th:text="${v.marque} + ' (' + ${v.immatriculation} + ') - ' + ${v.prixJour} + ' DH/j'"
+                                            th:data-prix="${v.prixJour}">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{voiture}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Client <span class="text-danger">*</span></label>
+                                <select class="form-select" th:field="*{client.id}"
+                                        th:classappend="${#fields.hasErrors('client')} ? 'is-invalid'">
+                                    <option value="">-- Sélectionner un client --</option>
+                                    <option th:each="c : ${clients}"
+                                            th:value="${c.id}"
+                                            th:text="${c.nom} + ' (' + ${c.cin} + ')'">
+                                    </option>
+                                </select>
+                                <div class="invalid-feedback" th:errors="*{client}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de début <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" th:field="*{dateDebut}" id="dateDebut"
+                                       th:classappend="${#fields.hasErrors('dateDebut')} ? 'is-invalid'"/>
+                                <div class="invalid-feedback" th:errors="*{dateDebut}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date de fin <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" th:field="*{dateFin}" id="dateFin"
+                                       th:classappend="${#fields.hasErrors('dateFin')} ? 'is-invalid'"/>
+                                <div class="invalid-feedback" th:errors="*{dateFin}"></div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Statut</label>
+                                <select class="form-select" th:field="*{statut}">
+                                    <option value="EN_COURS">En cours</option>
+                                    <option value="TERMINEE">Terminée</option>
+                                    <option value="ANNULEE">Annulée</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-submit">
+                                <i class="bi bi-check-lg me-1"></i>
+                                <span th:text="${location.id == null} ? 'Enregistrer' : 'Mettre à jour'"></span>
+                            </button>
+                            <a href="/locations" class="btn btn-outline-secondary" style="border-radius:8px">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="montant-preview">
+                    <div style="font-size:13px;opacity:.8;margin-bottom:8px"><i class="bi bi-calculator me-1"></i>Estimation du montant</div>
+                    <div class="montant-value" id="montantPreview">— DH</div>
+                    <div style="font-size:12px;opacity:.7;margin-top:8px" id="detailPreview">Sélectionnez une voiture et des dates</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+function updateMontant() {
+    const voitureSelect = document.getElementById('voitureSelect');
+    const dateDebut = document.getElementById('dateDebut').value;
+    const dateFin = document.getElementById('dateFin').value;
+    const selectedOption = voitureSelect.options[voitureSelect.selectedIndex];
+    const prix = selectedOption ? parseFloat(selectedOption.getAttribute('data-prix')) : 0;
+
+    if (prix && dateDebut && dateFin) {
+        const d1 = new Date(dateDebut), d2 = new Date(dateFin);
+        const jours = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)));
+        const montant = jours * prix;
+        document.getElementById('montantPreview').textContent = montant.toLocaleString('fr-MA', {minimumFractionDigits: 2}) + ' DH';
+        document.getElementById('detailPreview').textContent = jours + ' jour(s) × ' + prix.toFixed(2) + ' DH/j';
+    } else {
+        document.getElementById('montantPreview').textContent = '— DH';
+        document.getElementById('detailPreview').textContent = 'Sélectionnez une voiture et des dates';
+    }
+}
+document.getElementById('voitureSelect').addEventListener('change', updateMontant);
+document.getElementById('dateDebut').addEventListener('change', updateMontant);
+document.getElementById('dateFin').addEventListener('change', updateMontant);
+updateMontant();
+</script>
+</body>
+</html>
