@@ -15,7 +15,7 @@ Le but du projet est de démontrer l'utilisation de Thymeleaf comme moteur de te
 - Spring Boot
 - Spring MVC
 -  Thymeleaf
--  (optionnel) MySQL / H2 Database
+-  H2 Database
 
 ---
 
