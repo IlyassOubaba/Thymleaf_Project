@@ -21,7 +21,7 @@ Le but du projet est de démontrer l'utilisation de Thymeleaf comme moteur de te
 
 ## Fonctionnalités
 
-- Affichage dynamique des صفحات HTML
+- Affichage dynamique des  pages HTML
 
 - Intégration avec Spring Controller
 
